@@ -6,7 +6,7 @@ work_gong=bell4.wav
 break_gong=bell4.wav
 rest_gong=bell5.wav
 other_gong=bell5.wav
-tick_sound=tick.wav
+tick_sound=tick.m4a
 
 # Defaults
 sound=true
