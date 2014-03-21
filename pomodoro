@@ -2,6 +2,12 @@
 path_to_sounds=~/bin/resources/
 music_player=afplay
 
+work_gong=bell4.wav
+break_gong=bell4.wav
+rest_gong=bell5.wav
+other_gong=bell5.wav
+tick_sound=tick.wav
+
 # Defaults
 sound=true
 ticking=false
@@ -46,7 +52,7 @@ done
 
 play_tick() {
     if $sound; then
-        sound=${path_to_sounds}tick.wav
+        sound=${path_to_sounds}${tick_sound}
         eval "$music_player $sound" 
     fi
 }
@@ -55,13 +61,16 @@ play_sound(){
     if $sound; then
         case "$1" in
             "work")
-                sound=$path_to_sounds/bell4.wav
+                sound=${path_to_sounds}$work_gong
                 ;;
             "break")
-                sound=$path_to_sounds/bell4.wav
+                sound=${path_to_sounds}$break_gong
+                ;;
+            "rest")
+                sound=${path_to_sounds}$rest_gong
                 ;;
             *)
-                sound=$path_to_sounds/bowl-struck.wav
+                sound=${path_to_sounds}$other_gong
                 ;;
         esac
         eval "$music_player $sound"
