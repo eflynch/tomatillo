@@ -7,8 +7,8 @@ import subprocess
 
 
 def main():
-
-    resource_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
+    resource_path = os.path.abspath(
+        os.path.join(os.path.dirname(os.path.realpath(__file__)), "resources"))
     music_player = "afplay"
 
     parser = argparse.ArgumentParser(description="Pomodoro Clock")
