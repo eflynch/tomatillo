@@ -1,106 +1,51 @@
-#!/bin/bash
-path_to_sounds=~/bin/resources/
-music_player=afplay
+#!/usr/bin/env python3
 
-work_gong=bell4.wav
-break_gong=bell4.wav
-rest_gong=bell5.wav
-other_gong=bell5.wav
-tick_sound=tick.m4a
+import os
+import argparse
+import time
+import subprocess
 
-# Defaults
-sound=true
-ticking=false
-minute_length=60
-work_length=25
-work_number=4
-break_length=5
-rest_length=25
-usage="usage: pomodoro [-hstc] [-m time] [-w time] [-b time] [-r time] [-W number]
-where:
-    -h  show this help text
-    -s  silence bells
-    -t  ticking enabled
-    -c  run in clock mode
-    -m  set length of base time unit        (default: 60 seconds)
-    -w  set length of work period           (default: 25 base units)
-    -b  set length of break period          (default: 5 base units)
-    -r  set length of rest period           (default: 25 base units)
-    -W  set number of work periods per rest (default: 4)"
 
-while getopts :shm:w:W:b:r:tc option; do
-    case "$option" in
-        s)  sound=false;;
-        m)  minute_length=${OPTARG} ;;
-        w)  work_length=${OPTARG} ;;
-        b)  break_length=${OPTARG} ;;
-        r)  rest_length=${OPTARG} ;;
-        W)  work_number=${OPTARG} ;;
-        h)  echo "$usage"; exit 0 ;;
-        c)  minute_length=1; work_length=1500; break_length=300; rest_length=1500 ;;
-        t)  ticking=true ;;
-        :)  printf "missing argument for -%s\n" "${OPTARG}" >&2
-            echo "$usage" >&2
-            exit 1
-            ;;
-        \?) printf "illegal option: -%s\n" "${OPTARG}" >&2
-            echo "$usage" >&2
-            exit 1
-            ;;
-    esac
-done
+def main():
 
-play_tick() {
-    if $sound; then
-        sound=${path_to_sounds}${tick_sound}
-        eval "$music_player $sound" 
-    fi
-}
+    resource_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "resources"))
+    music_player = "afplay"
 
-play_sound(){
-    if $sound; then
-        case "$1" in
-            "work")
-                sound=${path_to_sounds}$work_gong
-                ;;
-            "break")
-                sound=${path_to_sounds}$break_gong
-                ;;
-            "rest")
-                sound=${path_to_sounds}$rest_gong
-                ;;
-            *)
-                sound=${path_to_sounds}$other_gong
-                ;;
-        esac
-        eval "$music_player $sound"
-    fi
-}
+    parser = argparse.ArgumentParser(description="Pomodoro Clock")
+    parser.add_argument("-s", "--silent", action='store_true', default=False, help="Silence bells")
+    parser.add_argument("-t", "--time-scale", type=int, default=60,
+                        help="Set duration of basic time unit")
+    parser.add_argument("-w", "--work-dur", type=int, default=25, help="Set length of work period")
+    parser.add_argument("-b", "--break-dur", type=int, default=5,
+                        help="Set length of break period")
+    parser.add_argument("-r", "--rest-dur", type=int, default=25, help="Set length of rest period")
+    parser.add_argument("-f", "--rest-freq", type=int, default=4,
+                        help="Set number of work periods per rest")
 
-timer(){
-    play_sound $1 &
-    echo -e "\r$1"
-    for i in $(seq 0 $2)
-    do
-        let "m = $2 - $i"; echo -en "\r\033[K$m"
-        if (( i != 0)); then
-            if $ticking; then
-                play_tick &
-            fi
-        fi
-        sleep $minute_length
-    done
-}
+    args = parser.parse_args()
 
-tput civis
-trap '{ tput cnorm;  exit 1; }' INT #Note that this is a hack!
-while [[ 1 -eq 1 ]] ; do
-    if (( $work_number > 1)); then
-        for i in $(seq 2 $work_number); do
-            timer "work" $work_length
-            timer "break" $break_length
-        done
-    fi
-    timer "work" $work_length
-    timer "rest" $rest_length
-done
+    def segment(sound, duration):
+        print(sound)
+        subprocess.Popen([music_player, os.path.join(resource_path, sound + ".mp3")])
+        time.sleep(args.time_scale * duration)
+
+    work_index = 0
+    working = False
+
+    while True:
+        if work_index < args.rest_freq:
+            if working:
+                segment("break", args.break_dur)
+                working = False
+            else:
+                segment("work", args.work_dur)
+                work_index += 1
+                working = True
+        else:
+            segment("rest", args.rest_dur)
+            work_index = 0
+            working = False
+
+
+if __name__ == "__main__":
+    main()
